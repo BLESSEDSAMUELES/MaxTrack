@@ -219,36 +219,17 @@ class MaxTrackApp {
     const container = document.getElementById('appContent');
     if (!container) return;
 
-    // 1. Build Solver Telemetry Banner
+    // 1. Update subtle solver telemetry in sidebar pill
     const sched = this.state.schedule || {};
-    const telemetry = sched.solver_telemetry || {};
-    const varsCount = telemetry.decision_variables || 48;
-    const constrCount = telemetry.constraints_evaluated || 132;
     const runtimeMs = sched.solver_runtime_ms || 18;
-    const objVal = telemetry.objective_score || 4820;
+    const solverStatus = sched.solver_status || 'OPTIMAL';
+    const pill = document.getElementById('sidebarSolverPill');
+    if (pill) {
+      pill.innerHTML = `<span>🟢</span><span>CP-SAT ${solverStatus} • ${runtimeMs}ms</span>`;
+    }
 
-    const bannerHTML = `
-      <div class="solver-telemetry-banner">
-        <div class="solver-badge">
-          <span>⚡</span>
-          <span>Google OR-Tools CP-SAT v9.15 Active</span>
-          <span style="background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 10px; margin-left: 4px;">
-            ${sched.solver_status || 'OPTIMAL'}
-          </span>
-        </div>
-        <div class="solver-stats">
-          <span>CORRIDOR: <strong>${this.state.corridor}</strong></span>
-          <span>VARIABLES: <strong>${varsCount}</strong></span>
-          <span>CONSTRAINTS: <strong>${constrCount}</strong></span>
-          <span>SOLVE TIME: <strong>${runtimeMs}ms</strong></span>
-          <span>SCORE: <strong>${objVal}</strong></span>
-          <span>BUFFER: <strong>15m HEADWAY</strong></span>
-        </div>
-      </div>
-    `;
-
-    // 2. Render container with banner + module content
-    container.innerHTML = bannerHTML + `<div id="moduleViewContainer"></div>`;
+    // 2. Render container cleanly without intrusive top green banner
+    container.innerHTML = `<div id="moduleViewContainer"></div>`;
     const moduleContainer = document.getElementById('moduleViewContainer');
 
     switch (this.state.activeModule) {

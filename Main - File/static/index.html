@@ -6,6 +6,8 @@
   <title>MaxTrack | AI-Powered Rail Block Planning (SIH PS 26027)</title>
   <link rel="icon" type="image/svg+xml" href="/assets/ir_logo.svg">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
   <div class="app-layout">
@@ -40,6 +42,10 @@
         <button class="nav-item-btn" data-module="marey_chart">
           <span class="nav-icon">📈</span>
           <span>Marey Chart</span>
+        </button>
+        <button class="nav-item-btn" data-module="geo_map">
+          <span class="nav-icon">🗺</span>
+          <span>Corridor Map</span>
         </button>
         <button class="nav-item-btn" data-module="what_if_simulator">
           <span class="nav-icon">🧪</span>

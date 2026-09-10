@@ -9,6 +9,7 @@ import { renderDataBridge } from './components/data_bridge.js';
 import { renderAIPrioritization } from './components/ai_prioritization.js';
 import { renderBlockScheduler } from './components/block_scheduler.js';
 import { renderMareyChart } from './components/marey_chart.js';
+import { renderGeoMap } from './components/geo_map.js';
 import { renderWhatIfSimulator } from './components/what_if_simulator.js';
 import { renderBDMSDispatch } from './components/bdms_dispatch.js';
 import { openAddTaskModal } from './components/add_task_modal.js';
@@ -256,6 +257,9 @@ class MaxTrackApp {
         break;
       case 'marey_chart':
         renderMareyChart(moduleContainer, this.state);
+        break;
+      case 'geo_map':
+        renderGeoMap(moduleContainer, this.state);
         break;
       case 'what_if_simulator':
         renderWhatIfSimulator(

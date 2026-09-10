@@ -73,6 +73,29 @@ export function renderCommandCenter(container, state, onNavigate, onOpenTaskModa
       </div>
     </div>
 
+    <!-- Feature 3: Compliance Rule Badges Ribbon -->
+    ${(() => {
+      const cs = kpis.compliance_summary || {};
+      const rules = cs.rules || [];
+      if (rules.length === 0) return '';
+      return `
+        <div style="margin-bottom: 16px;">
+          <div class="compliance-header">
+            <div class="compliance-title">◈ Statutory Compliance Verification (${cs.total_rules_checked || 0} Rules × ${sched.total_blocks_scheduled || 0} Blocks)</div>
+            <div class="compliance-pct">${cs.compliance_pct || 100}% Pass Rate</div>
+          </div>
+          <div class="compliance-ribbon">
+            ${rules.map(r => `
+              <div class="rule-badge ${r.status === 'SATISFIED' ? 'satisfied' : 'violated'}">
+                <span class="rule-badge-icon">${r.status === 'SATISFIED' ? '✓' : '✗'}</span>
+                <span>${r.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    })()}
+
     <!-- Two-Brain Hybrid Architecture Banner (Light Minimalist) -->
     <div class="rail-card" style="border-color: #bae6fd; background: #f0f9ff;">
       <div class="card-header" style="border-color: #e0f2fe;">

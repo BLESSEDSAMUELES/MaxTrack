@@ -34,6 +34,7 @@ export function renderBDMSDispatch(container, state) {
       <button class="sub-tab-btn" id="btnTabTrd">Form TRD-PB-1 / PB-2 (PTW)</button>
       <button class="sub-tab-btn" id="btnTabSpeed">Speed Restriction Cancellation</button>
       <button class="sub-tab-btn" id="btnTabWire">CRIS JSON Wire Payload</button>
+      <button class="sub-tab-btn" id="btnExportT351" style="color: #7c3aed; border-color: #ddd6fe; font-weight: 700;">📄 Export Printable T/351 →</button>
     </div>
 
     <!-- Memo Content Container -->
@@ -63,6 +64,11 @@ export function renderBDMSDispatch(container, state) {
   document.getElementById("btnTabWire")?.addEventListener("click", () => {
     setActiveTab("btnTabWire");
     renderWirePayload();
+  });
+
+  // Feature 4: Export printable T/351 HTML
+  document.getElementById("btnExportT351")?.addEventListener("click", () => {
+    window.open('/api/bdms/export/t351', '_blank');
   });
 
   function setActiveTab(btnId) {

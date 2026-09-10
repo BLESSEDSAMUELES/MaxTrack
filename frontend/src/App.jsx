@@ -1,166 +1,317 @@
-import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import KpiRibbon from './components/KpiRibbon';
-import ProofPanel from './components/ProofPanel';
-import BlockGantt from './components/BlockGantt';
-import BlockInspectorModal from './components/BlockInspectorModal';
-import TaskPoolTable from './components/TaskPoolTable';
-import ScenarioPlayground from './components/ScenarioPlayground';
+import React, { useState, useEffect, useCallback } from 'react';
+import Sidebar from './components/Sidebar';
+import CommandCenter from './components/CommandCenter';
+import DataBridge from './components/DataBridge';
+import AIPrioritization from './components/AIPrioritization';
+import BlockScheduler from './components/BlockScheduler';
+import MareyChart from './components/MareyChart';
+import GeoMap from './components/GeoMap';
+import WhatIfSimulator from './components/WhatIfSimulator';
+import BDMSDispatch from './components/BDMSDispatch';
 import AddTaskModal from './components/AddTaskModal';
-import AIModelDashboard from './components/AIModelDashboard';
-import { fetchDashboardStats, fetchTasks, fetchLatestPlan, generatePlan } from './services/api';
-import { Sparkles, Shield, Layers, HelpCircle, CheckCircle2 } from 'lucide-react';
+import InspectMathModal from './components/InspectMathModal';
+import FormT351Modal from './components/FormT351Modal';
+import AIAuditModal from './components/AIAuditModal';
+
+import {
+  fetchSystemStatus,
+  fetchDashboardKPIs,
+  fetchDataBridge,
+  fetchPrioritization,
+  fetchSchedule,
+  solveSchedule,
+  fetchBDMSMemos,
+  fetchMLMetrics,
+  resetSimulation
+} from './services/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'tasks', 'scenario'
+  const [activeModule, setActiveModule] = useState('command_center');
+  const [corridor, setCorridor] = useState('NDLS-CNB');
   const [horizon, setHorizon] = useState('weekly');
-  const [stats, setStats] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [selectedBlock, setSelectedBlock] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
+  const [state, setState] = useState({
+    status: null,
+    kpis: null,
+    dataBridge: null,
+    prioritization: null,
+    schedule: null,
+    bdmsMemos: null,
+    mlMetrics: null,
+    corridor: 'NDLS-CNB',
+    horizon: 'weekly'
+  });
 
-  const loadData = async () => {
+  const [isSolving, setIsSolving] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // Modal states
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [mathModalBlock, setMathModalBlock] = useState(null);
+  const [memoModalBlock, setMemoModalBlock] = useState(null);
+  const [isAIAuditOpen, setIsAIAuditOpen] = useState(false);
+
+  const showToast = useCallback((message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  const loadData = useCallback(async (c = corridor, h = horizon) => {
     try {
-      const [statsRes, planRes, tasksRes] = await Promise.all([
-        fetchDashboardStats(),
-        fetchLatestPlan(),
-        fetchTasks()
-      ]);
-      setStats(statsRes);
-      setPlan(planRes);
-      setTasks(tasksRes);
+      const [statusRes, kpiRes, bridgeRes, prioRes, schedRes, memoRes, mlRes] =
+        await Promise.all([
+          fetchSystemStatus(c).catch(() => ({})),
+          fetchDashboardKPIs(c, h).catch(() => ({})),
+          fetchDataBridge(c).catch(() => ({})),
+          fetchPrioritization(c).catch(() => ({})),
+          fetchSchedule(c, h).catch(() => ({})),
+          fetchBDMSMemos().catch(() => ({})),
+          fetchMLMetrics().catch(() => ({}))
+        ]);
+
+      setState({
+        status: statusRes,
+        kpis: kpiRes,
+        dataBridge: bridgeRes,
+        prioritization: prioRes,
+        schedule: schedRes,
+        bdmsMemos: memoRes,
+        mlMetrics: mlRes,
+        corridor: c,
+        horizon: h
+      });
     } catch (err) {
       console.error('Error loading MaxTrack data:', err);
+      showToast('Error connecting to MaxTrack backend', 'danger');
+    }
+  }, [corridor, horizon, showToast]);
+
+  useEffect(() => {
+    loadData(corridor, horizon);
+  }, [corridor, horizon, loadData]);
+
+  // Corridor change
+  const handleSelectCorridor = (newCorridor) => {
+    setCorridor(newCorridor);
+    loadData(newCorridor, horizon);
+    const corrName =
+      newCorridor === 'DNR-PNBE'
+        ? 'Danapur – Patna Junction (Branch 10km)'
+        : 'New Delhi – Kanpur Central (HDN 440km)';
+    showToast(`Loaded corridor: ${newCorridor} (${corrName})`, 'success');
+  };
+
+  // Horizon change
+  const handleSelectHorizon = async (newHorizon) => {
+    setHorizon(newHorizon);
+    setIsSolving(true);
+    try {
+      const newSched = await solveSchedule(corridor, newHorizon);
+      const newKPIs = await fetchDashboardKPIs(corridor, newHorizon);
+      setState((prev) => ({
+        ...prev,
+        horizon: newHorizon,
+        schedule: newSched,
+        kpis: newKPIs
+      }));
+      showToast(`Switched horizon to ${newHorizon.toUpperCase()} (${newSched.total_blocks_scheduled || 0} blocks scheduled)`, 'info');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to switch horizon', 'danger');
+    } finally {
+      setIsSolving(false);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleRegeneratePlan = async () => {
-    setIsRegenerating(true);
+  // Manual Trigger Solve
+  const handleTriggerSolve = async () => {
+    setIsSolving(true);
     try {
-      const newPlan = await generatePlan(horizon);
-      setPlan(newPlan);
-      const newStats = await fetchDashboardStats();
-      setStats(newStats);
-      showToast('CP-SAT Solver generated an optimal bundled block schedule in < 25ms!');
+      const newSched = await solveSchedule(corridor, horizon);
+      const newKPIs = await fetchDashboardKPIs(corridor, horizon);
+      setState((prev) => ({
+        ...prev,
+        schedule: newSched,
+        kpis: newKPIs
+      }));
+      showToast(
+        `CP-SAT solved in ${newSched.solver_runtime_ms || 18}ms (${newSched.total_blocks_scheduled || 0} blocks, ${newSched.total_downtime_saved_hours || 0}h saved)`,
+        'success'
+      );
     } catch (err) {
-      console.error('Failed to regenerate plan:', err);
-      showToast('Failed to solve plan.');
+      console.error(err);
+      showToast('Solver execution failed: ' + err.message, 'danger');
     } finally {
-      setIsRegenerating(false);
+      setIsSolving(false);
+    }
+  };
+
+  // When a task is added
+  const handleTaskAdded = (res) => {
+    if (res?.updated_schedule) {
+      setState((prev) => ({
+        ...prev,
+        schedule: res.updated_schedule,
+        kpis: res.updated_kpis
+      }));
+      showToast(res.message || 'Defect injected & CP-SAT re-optimized schedule!', 'success');
+    } else {
+      loadData(corridor, horizon);
+      showToast('Task added successfully', 'success');
+    }
+  };
+
+  // When a block is sanctioned
+  const handleBlockSanctioned = (blockId) => {
+    setState((prev) => {
+      const sched = prev.schedule ? { ...prev.schedule } : {};
+      const blocks = (sched.blocks || []).map((b) => {
+        if (b.bundle_id === blockId || b.schedule_id === blockId) {
+          return { ...b, status: 'SANCTIONED_COA', officer_sanctioned: true };
+        }
+        return b;
+      });
+      sched.blocks = blocks;
+      return { ...prev, schedule: sched };
+    });
+  };
+
+  // When simulation schedule is applied or reset
+  const handleScheduleUpdated = (res) => {
+    if (res?.schedule) {
+      setState((prev) => ({
+        ...prev,
+        schedule: res.schedule,
+        kpis: res.kpis || prev.kpis,
+        status: {
+          ...prev.status,
+          is_simulation_active: Boolean(res.scenario_id),
+          active_simulation_name: res.scenario_name || null
+        }
+      }));
+    } else {
+      loadData(corridor, horizon);
+    }
+  };
+
+  // Revert active simulation baseline
+  const handleResetSimulation = async () => {
+    try {
+      const res = await resetSimulation();
+      handleScheduleUpdated(res);
+      showToast('Live corridor schedule reverted to normal conflict-free baseline.', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to reset simulation: ' + err.message, 'danger');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-slate-100 flex flex-col font-sans">
-      {/* Top Navigation */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+    <div className="app-layout">
+      {/* Left Fixed Vertical Sidebar */}
+      <Sidebar
+        activeModule={activeModule}
+        onSelectModule={setActiveModule}
+        corridor={corridor}
+        onSelectCorridor={handleSelectCorridor}
         horizon={horizon}
-        setHorizon={(h) => {
-          setHorizon(h);
-          handleRegeneratePlan();
-        }}
-        onOpenAddModal={() => setIsAddModalOpen(true)}
-        onRegeneratePlan={handleRegeneratePlan}
-        isRegenerating={isRegenerating}
+        onSelectHorizon={handleSelectHorizon}
+        onTriggerSolve={handleTriggerSolve}
+        isSolving={isSolving}
+        solverTelemetry={state.schedule}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Executive KPI Ribbon (Always visible) */}
-        <KpiRibbon stats={stats} />
-
-        {/* Tab 1: Operational Dashboard */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* The Central Proof Panel: Manual Baseline vs MaxTrack Bundled */}
-            <ProofPanel comparison={stats?.proof_panel} />
-
-            {/* Bundled Master Block Gantt Calendar */}
-            <BlockGantt
-              blocks={plan?.blocks || []}
-              onSelectBlock={(b) => setSelectedBlock(b)}
-            />
-          </div>
+      {/* Main Content Area */}
+      <main className="main-content">
+        {activeModule === 'command_center' && (
+          <CommandCenter
+            state={state}
+            onNavigate={setActiveModule}
+            onOpenTaskModal={() => setIsAddTaskOpen(true)}
+            onResetSimulation={handleResetSimulation}
+          />
         )}
 
-        {/* Tab 2: Unified Cross-Department Task Pool */}
-        {activeTab === 'tasks' && (
-          <div className="space-y-6 animate-fadeIn">
-            <TaskPoolTable
-              tasks={tasks}
-              onOpenAddModal={() => setIsAddModalOpen(true)}
-            />
-          </div>
+        {activeModule === 'data_bridge' && (
+          <DataBridge state={state} onShowToast={showToast} />
         )}
 
-        {/* Tab 3: Interactive What-If Scenario Lab */}
-        {activeTab === 'scenario' && (
-          <div className="space-y-6 animate-fadeIn">
-            <ScenarioPlayground
-              onApplyToActivePlan={() => {
-                loadData();
-                setActiveTab('dashboard');
-              }}
-            />
-          </div>
+        {activeModule === 'ai_prioritization' && (
+          <AIPrioritization
+            state={state}
+            onOpenTaskModal={() => setIsAddTaskOpen(true)}
+            onShowToast={showToast}
+          />
         )}
 
-        {/* Tab 4: AI/ML Intelligence Dashboard */}
-        {activeTab === 'ai' && (
-          <div className="space-y-6 animate-fadeIn">
-            <AIModelDashboard />
-          </div>
+        {activeModule === 'block_scheduler' && (
+          <BlockScheduler
+            state={state}
+            onNavigate={setActiveModule}
+            onOpenMathModal={(b) => setMathModalBlock(b)}
+            onOpenMemoModal={(b) => setMemoModalBlock(b)}
+            onOpenAIAuditModal={() => setIsAIAuditOpen(true)}
+            onShowToast={showToast}
+            onBlockSanctioned={handleBlockSanctioned}
+          />
+        )}
+
+        {activeModule === 'marey_chart' && (
+          <MareyChart state={state} />
+        )}
+
+        {activeModule === 'geo_map' && (
+          <GeoMap state={state} />
+        )}
+
+        {activeModule === 'what_if_simulator' && (
+          <WhatIfSimulator
+            state={state}
+            onNavigate={setActiveModule}
+            onShowToast={showToast}
+            onScheduleUpdated={handleScheduleUpdated}
+          />
+        )}
+
+        {activeModule === 'bdms_dispatch' && (
+          <BDMSDispatch state={state} onShowToast={showToast} />
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-[#060910] py-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>MaxTrack Rail Asset Availability Optimization • Smart India Hackathon 2026 (PS: 26027)</span>
-          <span className="font-mono text-slate-400">Decision Support Architecture • Google OR-Tools CP-SAT</span>
-        </div>
-      </footer>
-
-      {/* Modals */}
-      {selectedBlock && (
-        <BlockInspectorModal
-          block={selectedBlock}
-          onClose={() => setSelectedBlock(null)}
-          onActionSuccess={() => {
-            loadData();
-            showToast('Block status successfully logged to audit trail.');
-          }}
-        />
-      )}
-
+      {/* Global Modals */}
       <AddTaskModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onTaskCreated={() => {
-          loadData();
-          showToast('Defect logged & priority score computed.');
-        }}
+        isOpen={isAddTaskOpen}
+        onClose={() => setIsAddTaskOpen(false)}
+        state={state}
+        onTaskAdded={handleTaskAdded}
       />
 
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-sky-600 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl shadow-sky-600/30 flex items-center space-x-2 animate-bounce">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMessage}</span>
+      <InspectMathModal
+        block={mathModalBlock}
+        onClose={() => setMathModalBlock(null)}
+      />
+
+      <FormT351Modal
+        block={memoModalBlock}
+        onClose={() => setMemoModalBlock(null)}
+        onShowToast={showToast}
+      />
+
+      <AIAuditModal
+        isOpen={isAIAuditOpen}
+        onClose={() => setIsAIAuditOpen(false)}
+        candidates={state.schedule?.candidate_windows || []}
+      />
+
+      {/* Toast Notifications */}
+      {toast && (
+        <div className="maxtrack-toast-container">
+          <div className={`maxtrack-toast ${toast.type}`}>
+            <span className="font-bold text-base">
+              {toast.type === 'success' ? '✓' : toast.type === 'danger' ? '⚠️' : '⚡'}
+            </span>
+            <span className="flex-1">{toast.message}</span>
+          </div>
         </div>
       )}
     </div>

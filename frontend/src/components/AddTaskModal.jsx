@@ -1,271 +1,321 @@
 import React, { useState } from 'react';
-import { X, PlusCircle, ShieldAlert, Zap, Layers, AlertCircle } from 'lucide-react';
-import { createTask } from '../services/api';
+import { addCustomTask } from '../services/api';
 
-export default function AddTaskModal({ isOpen, onClose, onTaskCreated }) {
+export default function AddTaskModal({ isOpen, onClose, state, onTaskAdded }) {
   if (!isOpen) return null;
 
-  const [departmentId, setDepartmentId] = useState(1); // 1: ENG, 2: SNT, 3: TRD
-  const [taskType, setTaskType] = useState('');
-  const [kmStart, setKmStart] = useState(12.5);
-  const [kmEnd, setKmEnd] = useState(13.5);
-  const [duration, setDuration] = useState(120);
+  const isDNR = state.corridor === 'DNR-PNBE';
+  const defaultKmStart = isDNR ? 4.5 : 285.5;
+  const defaultKmEnd = isDNR ? 5.2 : 286.8;
+  const defaultES = isDNR ? 'ES-DNR-02' : 'ES-24B';
+
+  const [preset, setPreset] = useState('imr_flaw');
+  const [dept, setDept] = useState('ENG');
+  const [line, setLine] = useState('UP_MAIN');
+  const [taskType, setTaskType] = useState('Emergency Rail Flaw Clamping & USFD Joint Renewal');
+  const [kmStart, setKmStart] = useState(defaultKmStart);
+  const [kmEnd, setKmEnd] = useState(defaultKmEnd);
+  const [es, setES] = useState(defaultES);
+  const [duration, setDuration] = useState(90);
+  const [safetyClass, setSafetyClass] = useState('critical');
+  const [cautionSpeed, setCautionSpeed] = useState(20);
+  const [machine, setMachine] = useState('');
   const [requiresPowerOff, setRequiresPowerOff] = useState(false);
-  const [machineType, setMachineType] = useState('');
-  const [safetyClass, setSafetyClass] = useState('high');
-  const [overdueDays, setOverdueDays] = useState(3);
+  const [defectDetail, setDefectDetail] = useState(
+    'Evaluator Live Injection: Severe transverse fissure > 65% cross-section. Immediate emergency intervention.'
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+
+  const handlePresetChange = (val) => {
+    setPreset(val);
+    if (val === 'imr_flaw') {
+      setDept('ENG');
+      setTaskType('Emergency Rail Flaw Clamping & USFD Joint Renewal');
+      setSafetyClass('critical');
+      setDuration(90);
+      setRequiresPowerOff(false);
+      setMachine('');
+      setCautionSpeed(20);
+      setDefectDetail('Evaluator Live Injection: Severe transverse fissure > 65% cross-section. Immediate emergency intervention.');
+    } else if (val === 'point_machine') {
+      setDept('SNT');
+      setTaskType('Point Machine 104A/B Overhaul & Detector Test');
+      setSafetyClass('critical');
+      setDuration(75);
+      setRequiresPowerOff(true);
+      setMachine('');
+      setCautionSpeed(30);
+      setDefectDetail('Evaluator Live Injection: Operating current spike 5.8A, detector lock delay under G&SR 3.51 Form T/351.');
+    } else if (val === 'ohe_hotspot') {
+      setDept('TRD');
+      setTaskType('OHE Contact Wire Stagger & Dropper Regulation');
+      setSafetyClass('critical');
+      setDuration(105);
+      setRequiresPowerOff(true);
+      setMachine('Tower Wagon TW-108');
+      setCautionSpeed(45);
+      setDefectDetail('Evaluator Live Injection: ACTM 2.11 stagger exceedance +230mm, thermal camera hotspot detection.');
+    } else if (val === 'tamper_block') {
+      setDept('ENG');
+      setTaskType('Continuous Heavy Track Tamping & Alignment');
+      setSafetyClass('high');
+      setDuration(180);
+      setRequiresPowerOff(false);
+      setMachine('CSM 09-32');
+      setCautionSpeed(35);
+      setDefectDetail('Evaluator Live Injection: Track Quality Index (TQI) degraded to 42.1, alignment twist 3.8mm/3.6m.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!taskType.trim()) {
-      setErrorMsg('Please provide a task type description');
-      return;
-    }
-
     setIsSubmitting(true);
-    setErrorMsg('');
-
     try {
       const payload = {
-        department_id: Number(departmentId),
-        corridor_id: 1,
+        department: dept,
+        corridor_code: state.corridor,
+        line,
         task_type: taskType,
-        km_marker_start: parseFloat(kmStart),
-        km_marker_end: parseFloat(kmEnd),
-        estimated_duration_minutes: parseInt(duration, 10),
-        requires_power_off: Boolean(requiresPowerOff),
-        requires_machine_type: machineType || null,
+        km_start: parseFloat(kmStart),
+        km_end: parseFloat(kmEnd),
+        elementary_section: es,
+        duration_minutes: parseInt(duration, 10),
         safety_class: safetyClass,
-        irpwm_periodicity_days: 60,
-        overdue_days: parseInt(overdueDays, 10),
-        degradation_trend: 0.75,
-        source_system: departmentId === 1 ? 'TMS' : departmentId === 2 ? 'SMMS' : 'TDMS'
+        caution_order_speed: parseInt(cautionSpeed, 10),
+        machine_required: machine || null,
+        requires_power_off: requiresPowerOff,
+        defect_detail: defectDetail,
+        days_overdue: 5,
+        codal_interval_days: 60,
+        tqi: 41.5,
+        rail_temp_c: 42.0
       };
 
-      await createTask(payload);
-      onTaskCreated();
+      const res = await addCustomTask(payload);
+      onTaskAdded?.(res);
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Failed to create maintenance task');
+      console.error(err);
+      alert('Failed to inject task: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#0f172a] border border-slate-700 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden text-slate-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/80">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
-              <PlusCircle className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Log Department Maintenance Defect</h3>
-              <p className="text-[11px] text-slate-400">Enters unified task pool for automatic bundling</p>
-            </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">
+            <span>⚡</span>
+            <span>LIVE MAINTENANCE REQUISITION INJECTION (EVALUATOR TESTBED)</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
-          >
-            <X className="w-4 h-4" />
+          <button className="modal-close-btn" onClick={onClose}>
+            &times;
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Department Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Owning Railway Department
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => { setDepartmentId(1); setRequiresPowerOff(false); }}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                  departmentId === 1
-                    ? 'bg-sky-500/20 border-sky-500 text-sky-400'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                Engineering (P-Way)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setDepartmentId(2); setRequiresPowerOff(true); }}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                  departmentId === 2
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                Signal & Telecom
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setDepartmentId(3); setRequiresPowerOff(true); }}
-                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                  departmentId === 3
-                    ? 'bg-amber-500/20 border-amber-500 text-amber-400'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                Traction (TRD)
-              </button>
-            </div>
+        <div className="modal-body">
+          <div className="bg-[#f0f9ff] border border-[#bae6fd] rounded-md p-3 mb-3.5 text-xs text-[#0369a1] leading-relaxed">
+            <strong>Evaluator Live Demonstration:</strong> Inject a field defect demand. Watch <strong>Brain 1</strong> compute the Multi-Criteria ACI score and <strong>Brain 2</strong> Google OR-Tools CP-SAT re-solve the master block in real time.
           </div>
 
-          {/* Task Type */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
-              Defect Description / Task Type
-            </label>
-            <input
-              type="text"
-              required
-              value={taskType}
-              onChange={(e) => setTaskType(e.target.value)}
-              placeholder="e.g. Switch Expansion Joint Renewal, OHE Dropper Replacement"
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="form-grid">
+            {/* Quick Preset Selector */}
+            <div className="form-group full-width">
+              <label className="form-label">Quick Defect Template Presets</label>
+              <select
+                className="form-select"
+                value={preset}
+                onChange={(e) => handlePresetChange(e.target.value)}
+              >
+                <option value="custom">-- Custom Maintenance Demand --</option>
+                <option value="imr_flaw">ENG: Severe Ultrasonic Rail Flaw (IMR Para 706 - Critical)</option>
+                <option value="point_machine">S&T: Point Machine 104A Operating Current Spike (Form T/351)</option>
+                <option value="ohe_hotspot">TRD: 25kV OHE Dropper Thermal Hotspot Exceedance</option>
+                <option value="tamper_block">ENG: High-Speed Ballast Tamping & Track Realignment (CSM 09-32)</option>
+              </select>
+            </div>
 
-          {/* Location Km Markers */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Start Kilometer Marker
-              </label>
+            {/* Department */}
+            <div className="form-group">
+              <label className="form-label">Department</label>
+              <select
+                className="form-select"
+                value={dept}
+                onChange={(e) => setDept(e.target.value)}
+                required
+              >
+                <option value="ENG">Civil Engineering (P-Way / TMS)</option>
+                <option value="SNT">Signalling & Telecom (S&T / SMMS)</option>
+                <option value="TRD">Traction Distribution (TRD / TDMS)</option>
+              </select>
+            </div>
+
+            {/* Line */}
+            <div className="form-group">
+              <label className="form-label">Track Line</label>
+              <select
+                className="form-select"
+                value={line}
+                onChange={(e) => setLine(e.target.value)}
+                required
+              >
+                <option value="UP_MAIN">UP Main Track</option>
+                <option value="DN_MAIN">DN Main Track</option>
+              </select>
+            </div>
+
+            {/* Task Type */}
+            <div className="form-group full-width">
+              <label className="form-label">Task Type / Requisition Title</label>
+              <input
+                type="text"
+                className="form-input"
+                value={taskType}
+                onChange={(e) => setTaskType(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Km Start & End */}
+            <div className="form-group">
+              <label className="form-label">Kilometer Start Post</label>
               <input
                 type="number"
                 step="0.1"
+                className="form-input"
                 value={kmStart}
                 onChange={(e) => setKmStart(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                required
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                End Kilometer Marker
-              </label>
+
+            <div className="form-group">
+              <label className="form-label">Kilometer End Post</label>
               <input
                 type="number"
                 step="0.1"
+                className="form-input"
                 value={kmEnd}
                 onChange={(e) => setKmEnd(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                required
               />
             </div>
-          </div>
 
-          {/* Duration & Overdue Days */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Duration (Minutes)
-              </label>
+            {/* Elementary Section */}
+            <div className="form-group">
+              <label className="form-label">25kV Elementary Section ID</label>
+              <input
+                type="text"
+                className="form-input"
+                value={es}
+                onChange={(e) => setES(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Duration (Minutes) */}
+            <div className="form-group">
+              <label className="form-label">Requested Window Duration (Minutes)</label>
               <input
                 type="number"
                 step="15"
                 min="30"
+                max="360"
+                className="form-input"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                required
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Days Overdue (vs IRPWM)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={overdueDays}
-                onChange={(e) => setOverdueDays(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
-              />
-            </div>
-          </div>
 
-          {/* Safety Class & Machine */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Safety Criticality Class
-              </label>
+            {/* Safety Criticality */}
+            <div className="form-group">
+              <label className="form-label">Safety Criticality Class</label>
               <select
+                className="form-select"
                 value={safetyClass}
                 onChange={(e) => setSafetyClass(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
               >
-                <option value="critical">Critical (Immediate Block)</option>
-                <option value="high">High (Within 7 Days)</option>
-                <option value="routine">Routine Maintenance</option>
+                <option value="critical">Critical (Emergency / Urgent)</option>
+                <option value="high">High Priority</option>
+                <option value="normal">Normal Periodic Maintenance</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Required Machine
-              </label>
+
+            {/* Caution Order Speed */}
+            <div className="form-group">
+              <label className="form-label">Caution Order Speed (km/h)</label>
+              <input
+                type="number"
+                min="15"
+                max="110"
+                step="5"
+                className="form-input"
+                value={cautionSpeed}
+                onChange={(e) => setCautionSpeed(e.target.value)}
+              />
+            </div>
+
+            {/* Machine Required */}
+            <div className="form-group">
+              <label className="form-label">Special Fleet Machine Required</label>
               <select
-                value={machineType}
-                onChange={(e) => setMachineType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                className="form-select"
+                value={machine}
+                onChange={(e) => setMachine(e.target.value)}
               >
-                <option value="">None (Manual Gang)</option>
-                <option value="tamping_machine">Tamping Machine (Duomatic)</option>
-                <option value="tower_wagon">OHE Tower Wagon</option>
+                <option value="">None (Manual Gang / Tool Van)</option>
+                <option value="CSM 09-32">CSM 09-32 Heavy Tamper</option>
+                <option value="Tower Wagon TW-108">Tower Wagon TW-108 (TRD)</option>
+                <option value="BCM RM-80">BCM RM-80 Ballast Cleaner</option>
+                <option value="RGM-96">RGM-96 Rail Grinder</option>
               </select>
             </div>
-          </div>
 
-          {/* OHE Power Off Checkbox */}
-          <div className="flex items-center space-x-2 pt-2">
-            <input
-              type="checkbox"
-              id="powerOffCheck"
-              checked={requiresPowerOff}
-              onChange={(e) => setRequiresPowerOff(e.target.checked)}
-              className="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-400"
-            />
-            <label htmlFor="powerOffCheck" className="text-xs font-medium text-slate-300 flex items-center space-x-1 cursor-pointer">
-              <Zap className="w-3.5 h-3.5 text-rose-400" />
-              <span>Requires 25kV OHE Power-Off Isolation (Permit to Work)</span>
-            </label>
-          </div>
+            {/* Power Off Checkbox */}
+            <div className="form-group justify-center">
+              <label className="form-checkbox-label mt-3.5">
+                <input
+                  type="checkbox"
+                  checked={requiresPowerOff}
+                  onChange={(e) => setRequiresPowerOff(e.target.checked)}
+                />
+                <span>Requires 25 kV AC Power Isolation (PTW)</span>
+              </label>
+            </div>
 
-          {/* Footer Submit */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-lg shadow-sky-600/20 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Logging...' : 'Log Defect & Recompute Priority'}
-            </button>
-          </div>
-        </form>
+            {/* Defect Details */}
+            <div className="form-group full-width">
+              <label className="form-label">Defect Observation & Field Justification</label>
+              <textarea
+                className="form-textarea"
+                rows="2"
+                value={defectDetail}
+                onChange={(e) => setDefectDetail(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group full-width flex justify-end gap-2.5 mt-2">
+              <button
+                type="button"
+                className="sub-tab-btn"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="action-btn-primary !bg-[#059669] !border-[#047857]"
+                disabled={isSubmitting}
+              >
+                <span>⚡</span>
+                <span>{isSubmitting ? 'Brain 1 Scoring & Brain 2 Solving...' : 'Submit & Re-Optimize Schedule'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

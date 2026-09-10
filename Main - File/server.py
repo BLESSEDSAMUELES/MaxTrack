@@ -533,11 +533,21 @@ def react_what_if(payload: Dict[str, Any] = Body(...)):
     return run_simulation(payload)
 
 # =========================================================================
-# STATIC FILE HOSTING (Main - File/static)
+# REACT FRONTEND BUILD HOSTING
 # =========================================================================
-static_dir = BASE_DIR / "static"
-if static_dir.exists():
-    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
+frontend_dist = BASE_DIR.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+else:
+    @app.get("/")
+    def root():
+        return {
+            "system": "IR-ABPS | MAXTRACK API Backend",
+            "authority": "Ministry of Railways · CRIS · SIH Problem Statement 26027",
+            "frontend_dev_url": "http://127.0.0.1:5173",
+            "status": "OPERATIONAL",
+            "docs": "/docs"
+        }
 
 if __name__ == "__main__":
     import uvicorn

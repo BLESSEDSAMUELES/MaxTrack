@@ -140,6 +140,7 @@ def get_kpis(horizon: Optional[str] = None, corridor: Optional[str] = None):
         "horizon": horizon_str,
         "corridor": c_code,
         "is_simulation_active": _active_simulation is not None,
+        "compliance_summary": sched.get("compliance_summary", {}),
         "proof_panel": {
             "manual_baseline": {
                 "total_separate_blocks": blocks_count * 2 + 3,
@@ -413,6 +414,20 @@ def get_bdms_memos(block_id: Optional[str] = None):
         "speed_restoration_memo": bdms_gateway.generate_speed_restoration_memo(target_block),
         "cris_wire_payload": bdms_gateway.export_cris_wire_payload(sched)
     }
+
+@app.get("/api/bdms/export/t351")
+def export_t351_html(block_id: Optional[str] = None):
+    """Returns a print-ready standalone HTML T/351 form for PDF export."""
+    from fastapi.responses import HTMLResponse
+    sched = get_current_schedule(_active_corridor, _active_horizon)
+    target_block = None
+    if block_id:
+        target_block = next((b for b in sched.get("blocks", []) if b.get("bundle_id") == block_id or b.get("schedule_id") == block_id), None)
+    if not target_block and sched.get("blocks"):
+        target_block = sched["blocks"][0]
+    target_block = target_block or {}
+    html_content = bdms_gateway.generate_html_t351(target_block)
+    return HTMLResponse(content=html_content, status_code=200)
 
 # =========================================================================
 # REACT FRONTEND COMPATIBILITY APIS (for frontend/ Vite app on :5173)

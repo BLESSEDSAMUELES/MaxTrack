@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="46" stroke="#0284c7" stroke-width="4" fill="#070e1c"/>
+  <circle cx="50" cy="50" r="38" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3 2"/>
+  <path d="M50 16 L56 32 L72 32 L59 42 L64 58 L50 48 L36 58 L41 42 L28 32 L44 32 Z" fill="#f59e0b"/>
+  <!-- Train Front Silhouette -->
+  <rect x="36" y="52" width="28" height="24" rx="4" fill="#0284c7"/>
+  <rect x="40" y="56" width="20" height="8" rx="2" fill="#070e1c"/>
+  <circle cx="42" cy="70" r="2.5" fill="#f59e0b"/>
+  <circle cx="58" cy="70" r="2.5" fill="#f59e0b"/>
+  <path d="M30 84 L70 84" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
+  <path d="M36 84 L32 90 M46 84 L44 90 M54 84 L56 90 M64 84 L68 90" stroke="#94a3b8" stroke-width="2"/>
+</svg>

@@ -1,0 +1,82 @@
+{
+  "status": "TRAINED",
+  "algorithm": "LightGBM (Gradient Boosting Decision Trees)",
+  "lightgbm_version": "4.7.0",
+  "total_dataset_records": 22000,
+  "train_samples": 17600,
+  "test_samples": 4400,
+  "department_breakdown": {
+    "TMS_Civil_Engineering": 10000,
+    "SMMS_Signalling_Telecom": 10000,
+    "TDMS_Electrical_TRD": 2000
+  },
+  "aci_metrics": {
+    "r2_score": 0.9926,
+    "mae": 0.63,
+    "rmse": 0.81
+  },
+  "duration_quantile_metrics": {
+    "q50_r2_score": 0.7961,
+    "q10_mae_mins": 37.2,
+    "q50_mae_mins": 24.4,
+    "q90_mae_mins": 44.4
+  },
+  "feature_importances": [
+    {
+      "feature": "safety_score",
+      "importance": 1077.0,
+      "percentage": 25.0
+    },
+    {
+      "feature": "env_thermal_stress",
+      "importance": 926.0,
+      "percentage": 21.5
+    },
+    {
+      "feature": "overdue_ratio",
+      "importance": 763.0,
+      "percentage": 17.7
+    },
+    {
+      "feature": "speed_penalty",
+      "importance": 720.0,
+      "percentage": 16.7
+    },
+    {
+      "feature": "traffic_density",
+      "importance": 707.0,
+      "percentage": 16.4
+    },
+    {
+      "feature": "concurrency_potential",
+      "importance": 66.0,
+      "percentage": 1.5
+    },
+    {
+      "feature": "power_cut_required",
+      "importance": 24.0,
+      "percentage": 0.6
+    },
+    {
+      "feature": "machine_required",
+      "importance": 11.0,
+      "percentage": 0.3
+    },
+    {
+      "feature": "dept_code_encoded",
+      "importance": 8.0,
+      "percentage": 0.2
+    }
+  ],
+  "features": [
+    "safety_score",
+    "speed_penalty",
+    "overdue_ratio",
+    "traffic_density",
+    "env_thermal_stress",
+    "concurrency_potential",
+    "dept_code_encoded",
+    "power_cut_required",
+    "machine_required"
+  ]
+}

@@ -70,7 +70,7 @@ export default function AIAuditModal({ isOpen, onClose, candidates = [] }) {
       <div className="modal-dialog max-w-4xl" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
-            <span>🧠</span>
+            <span></span>
             <span>AI DECISION AUDIT: CP-SAT CANDIDATE WINDOW EVALUATION</span>
           </div>
           <button className="modal-close-btn" onClick={onClose}>

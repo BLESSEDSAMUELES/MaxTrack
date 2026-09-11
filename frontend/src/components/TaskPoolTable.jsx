@@ -32,7 +32,7 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
         );
       default:
         return (
-          <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
+          <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
             ROUTINE
           </span>
         );
@@ -40,23 +40,23 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
   };
 
   return (
-    <div className="rail-glass p-6 rounded-3xl border border-slate-800">
+    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
       {/* Header & Department Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-800 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-200 gap-4">
         <div>
-          <h3 className="text-base font-bold text-white flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-sky-400" />
+          <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center space-x-2">
+            <Layers className="w-4 h-4 text-sky-600" />
             <span>Unified Cross-Department Maintenance Demand</span>
-            <span className="text-xs font-normal text-slate-400">({filteredTasks.length} pending items)</span>
+            <span className="text-xs font-normal text-slate-500">({filteredTasks.length} pending items)</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Single transparent view reconciling TMS (Track), SMMS (Signals), and TDMS (Traction) defect logs.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Dept Filter Tabs */}
-          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
+          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 text-xs">
             {['ALL', 'ENG', 'SNT', 'TRD'].map((dept) => (
               <button
                 key={dept}
@@ -64,7 +64,7 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
                 className={`px-3 py-1 rounded-lg font-semibold transition-colors ${
                   selectedDept === dept
                     ? 'bg-sky-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {dept === 'ALL' ? 'All Depts' : dept}
@@ -74,7 +74,7 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
 
           <button
             onClick={onOpenAddModal}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-sky-700 border border-slate-200 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Log Task</span>
@@ -84,8 +84,8 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
 
       {/* Table */}
       <div className="overflow-x-auto mt-4">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800 text-[11px]">
+        <table className="w-full text-left text-xs text-slate-700">
+          <thead className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold border-b border-slate-200 text-[11px]">
             <tr>
               <th className="py-3 px-4">Task & Department</th>
               <th className="py-3 px-4">Location</th>
@@ -96,7 +96,7 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
               <th className="py-3 px-4 text-right">Breakdown</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-slate-200">
             {filteredTasks.map((task) => {
               const isExpanded = expandedTaskId === task.id;
               const pScore = task.priority_score?.total_score || 50;
@@ -105,7 +105,7 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
                 <React.Fragment key={task.id}>
                   <tr
                     onClick={() => toggleExpand(task.id)}
-                    className="hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
@@ -114,19 +114,19 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
                           task.department_code === 'SNT' ? 'bg-emerald-400' : 'bg-amber-400'
                         }`}></span>
                         <div>
-                          <div className="font-bold text-white text-xs">{task.task_type}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">
+                          <div className="font-bold text-slate-900 text-xs">{task.task_type}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">
                             {task.department_name} • {task.source_system} #{task.source_ref}
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 font-mono text-slate-200">
+                    <td className="py-3 px-4 font-mono text-slate-700">
                       km {task.km_marker_start.toFixed(1)} - {task.km_marker_end.toFixed(1)}
                     </td>
 
-                    <td className="py-3 px-4 font-medium text-slate-300">
+                    <td className="py-3 px-4 font-medium text-slate-700 font-mono">
                       {task.estimated_duration_minutes} min
                     </td>
 
@@ -149,14 +149,14 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
                     <td className="py-3 px-4">
                       <div className="w-36">
                         <div className="flex items-center justify-between text-[11px] font-bold mb-1">
-                          <span className="text-sky-400">{pScore}/100</span>
+                          <span className="text-sky-700 font-mono">{pScore}/100</span>
                           <span className="text-[10px] text-slate-500 font-normal">Ranked</span>
                         </div>
-                        <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
                               pScore >= 80 ? 'bg-gradient-to-r from-amber-500 to-rose-500' :
-                              pScore >= 60 ? 'bg-gradient-to-r from-sky-500 to-emerald-500' : 'bg-slate-600'
+                              pScore >= 60 ? 'bg-gradient-to-r from-sky-500 to-emerald-500' : 'bg-slate-400'
                             }`}
                             style={{ width: `${Math.min(100, pScore)}%` }}
                           ></div>
@@ -164,8 +164,8 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 text-right text-slate-400">
-                      <button className="p-1 rounded hover:bg-slate-700/60 text-slate-300">
+                    <td className="py-3 px-4 text-right text-slate-500">
+                      <button className="p-1 rounded hover:bg-slate-200 text-slate-600">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                     </td>
@@ -173,58 +173,58 @@ export default function TaskPoolTable({ tasks, onOpenAddModal }) {
 
                   {/* Expanded Score Explanation Drawer */}
                   {isExpanded && task.priority_score && (
-                    <tr className="bg-slate-950/80">
-                      <td colSpan="7" className="p-4 border-b border-slate-800">
-                        <div className="bg-slate-900/90 rounded-2xl p-4 border border-sky-500/20">
-                          <div className="flex items-center space-x-2 text-xs font-bold text-sky-400 mb-2">
+                    <tr className="bg-slate-50/50">
+                      <td colSpan="7" className="p-4 border-b border-slate-200">
+                        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                          <div className="flex items-center space-x-2 text-xs font-bold text-sky-700 mb-2">
                             <Info className="w-4 h-4" />
                             <span>Transparent 4-Factor Priority Score Formulation</span>
                           </div>
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                            <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">1. IRPWM Overdue Factor</span>
-                              <span className="font-bold text-sky-400 text-sm mt-0.5 block">
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                              <span className="text-[10px] text-slate-500 block">1. IRPWM Overdue Factor</span>
+                              <span className="font-bold text-sky-700 text-sm mt-0.5 block font-mono">
                                 +{task.priority_score.overdue_component.toFixed(1)} pts
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-600">
                                 {task.overdue_days} days past interval
                               </span>
                             </div>
 
-                            <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">2. Safety Criticality</span>
-                              <span className="font-bold text-sky-400 text-sm mt-0.5 block">
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                              <span className="text-[10px] text-slate-500 block">2. Safety Criticality</span>
+                              <span className="font-bold text-sky-700 text-sm mt-0.5 block font-mono">
                                 +{task.priority_score.safety_component.toFixed(1)} pts
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-600">
                                 {task.safety_class.toUpperCase()} statutory weight
                               </span>
                             </div>
 
-                            <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">3. Degradation Trend</span>
-                              <span className="font-bold text-sky-400 text-sm mt-0.5 block">
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                              <span className="text-[10px] text-slate-500 block">3. Degradation Trend</span>
+                              <span className="font-bold text-sky-700 text-sm mt-0.5 block font-mono">
                                 +{task.priority_score.degradation_component.toFixed(1)} pts
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-600">
                                 TGI & wire wear rate
                               </span>
                             </div>
 
-                            <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">4. Traffic Corridor Density</span>
-                              <span className="font-bold text-sky-400 text-sm mt-0.5 block">
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                              <span className="text-[10px] text-slate-500 block">4. Traffic Corridor Density</span>
+                              <span className="font-bold text-sky-700 text-sm mt-0.5 block font-mono">
                                 +{task.priority_score.traffic_impact_component.toFixed(1)} pts
                               </span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-600">
                                 Main line freight/passenger
                               </span>
                             </div>
                           </div>
 
-                          <p className="mt-3 text-xs text-slate-300 font-medium">
-                            <strong className="text-white">Explainability Statement:</strong> {task.priority_score.explanation}
+                          <p className="mt-3 text-xs text-slate-700 font-medium">
+                            <strong className="text-slate-900">Explainability Statement:</strong> {task.priority_score.explanation}
                           </p>
                         </div>
                       </td>

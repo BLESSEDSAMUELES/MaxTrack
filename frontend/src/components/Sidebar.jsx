@@ -15,14 +15,14 @@ export default function Sidebar({
   const solverStatus = solverTelemetry?.solver_status || 'OPTIMAL';
 
   const modules = [
-    { id: 'command_center', label: 'Command Center', icon: '⚡' },
-    { id: 'data_bridge', label: 'Data Bridge', icon: '🗄' },
-    { id: 'ai_prioritization', label: 'AI Prioritization', icon: '🧠' },
-    { id: 'block_scheduler', label: 'Block Scheduler', icon: '📅' },
-    { id: 'marey_chart', label: 'Marey Chart', icon: '📈' },
-    { id: 'geo_map', label: 'Corridor Map', icon: '🗺' },
-    { id: 'what_if_simulator', label: 'What-If Simulator', icon: '🧪' },
-    { id: 'bdms_dispatch', label: 'CRIS Gateway', icon: '📑' }
+    { id: 'command_center', label: 'Command Center' },
+    { id: 'data_bridge', label: 'Data Bridge' },
+    { id: 'ai_prioritization', label: 'AI Prioritization' },
+    { id: 'block_scheduler', label: 'Block Scheduler' },
+    { id: 'marey_chart', label: 'Marey Chart' },
+    { id: 'geo_map', label: 'Corridor Map' },
+    { id: 'what_if_simulator', label: 'What-If Simulator' },
+    { id: 'bdms_dispatch', label: 'CRIS Gateway' }
   ];
 
   return (
@@ -90,12 +90,12 @@ export default function Sidebar({
           onClick={onTriggerSolve}
           disabled={isSolving}
         >
-          <span>⚡</span>
+          <span></span>
           <span>{isSolving ? 'Solving CP-SAT...' : 'Re-Solve (CP-SAT)'}</span>
         </button>
 
         <div className="sidebar-solver-pill">
-          <span>🟢</span>
+          <span></span>
           <span>CP-SAT {solverStatus} • {runtimeMs}ms</span>
         </div>
       </div>

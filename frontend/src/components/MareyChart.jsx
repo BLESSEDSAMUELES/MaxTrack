@@ -296,7 +296,7 @@ export default function MareyChart({ state }) {
           ctx.fillStyle = '#dc2626';
           ctx.font = 'bold 9px JetBrains Mono, monospace';
           ctx.textAlign = 'left';
-          ctx.fillText(`⚠️ EMERGENCY: ${b.bundle_id} (${b.duration_minutes}m)`, x1 + 4, y1 + 10);
+          ctx.fillText(`EMERGENCY: ${b.bundle_id} (${b.duration_minutes}m)`, x1 + 4, y1 + 10);
         } else {
           ctx.fillStyle = b.power_off_required ? 'rgba(217, 119, 6, 0.14)' : 'rgba(2, 132, 199, 0.12)';
           ctx.fillRect(x1, y1 - 4, bW, bH + 8);
@@ -681,21 +681,21 @@ export default function MareyChart({ state }) {
           {/* Hover Tooltip */}
           {hoveredTrain && (
             <div
-              className="fixed pointer-events-none z-50 bg-[#0f172a] text-white px-3 py-2 rounded-md shadow-xl text-[11px] font-sans border border-slate-700"
+              className="fixed pointer-events-none z-50 bg-white text-slate-900 px-3 py-2 rounded-md shadow-xl text-[11px] font-sans border border-slate-200"
               style={{
                 left: mousePos.x + 14,
                 top: mousePos.y - 35
               }}
             >
-              <div className="font-bold text-[#38bdf8] flex items-center gap-1.5">
+              <div className="font-bold text-[#0284c7] flex items-center gap-1.5">
                 <span>{hoveredTrain.train.train_no}</span>
                 <span>•</span>
                 <span>{hoveredTrain.train.train_name}</span>
               </div>
-              <div className="text-[#cbd5e1] mt-0.5">
-                Line: <strong className="text-white">{hoveredTrain.train.direction} Main</strong> • Speed: <strong className="text-[#34d399]">{hoveredTrain.train.speed_kmh || 110} km/h</strong>
+              <div className="text-slate-600 mt-0.5">
+                Line: <strong className="text-slate-900">{hoveredTrain.train.direction} Main</strong> • Speed: <strong className="text-[#059669]">{hoveredTrain.train.speed_kmh || 110} km/h</strong>
               </div>
-              <div className="text-[#94a3b8] text-[10px] mt-0.5">
+              <div className="text-slate-500 text-[10px] mt-0.5 font-mono">
                 Position: Km {hoveredTrain.approxKm} @ {hoveredTrain.timeAtPos}
               </div>
             </div>

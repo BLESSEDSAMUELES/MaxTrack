@@ -54,7 +54,7 @@ export default function BlockScheduler({
               className="action-btn-primary !bg-[#7c3aed] !border-[#6d28d9]"
               onClick={onOpenAIAuditModal}
             >
-              🧠 View AI Decision Audit →
+              View AI Decision Audit →
             </button>
             <button
               className="action-btn-primary !bg-[#0284c7]"

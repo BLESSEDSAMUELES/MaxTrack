@@ -47,7 +47,7 @@ export default function CommandCenter({
         <div className="diff-card !bg-red-50 !border-red-200 !border-l-red-600">
           <div className="diff-header">
             <div className="diff-title !text-red-900 flex items-center gap-2">
-              <span>⚠️ ACTIVE DISRUPTION SIMULATION INJECTED: {status.active_simulation_name || 'Custom Perturbation'}</span>
+              <span>ACTIVE DISRUPTION SIMULATION INJECTED: {status.active_simulation_name || 'Custom Perturbation'}</span>
             </div>
             <button
               className="sub-tab-btn !bg-red-100 !border-red-300 !text-red-700 font-bold hover:!bg-red-200"

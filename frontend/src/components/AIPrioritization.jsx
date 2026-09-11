@@ -279,7 +279,7 @@ export default function AIPrioritization({ state, onOpenTaskModal, onShowToast }
               className="action-btn-primary w-full justify-center !py-1.5 mt-2"
               disabled={evalLoading}
             >
-              <span>🧠</span>
+              <span></span>
               <span>{evalLoading ? 'Running LightGBM Inference...' : 'Run LightGBM Model Prediction'}</span>
             </button>
           </form>

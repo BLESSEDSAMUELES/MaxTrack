@@ -11,7 +11,7 @@ export default function Navbar({
   isRegenerating
 }) {
   return (
-    <header className="border-b border-slate-800 bg-[#0b1120]/90 backdrop-blur-md sticky top-0 z-40">
+    <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Division Info */}
@@ -21,27 +21,27 @@ export default function Navbar({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
+                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-slate-900 via-slate-700 to-sky-700 bg-clip-text text-transparent">
                   MaxTrack
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
                   SIH PS 26027
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 Delhi Division (NR) • Station A – Station B (10.0 km)
               </p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+          <nav className="hidden md:flex items-center space-x-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'dashboard'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
               <Activity className="w-3.5 h-3.5" />
@@ -53,7 +53,7 @@ export default function Navbar({
               className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'tasks'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -65,7 +65,7 @@ export default function Navbar({
               className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'scenario'
                   ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -77,7 +77,7 @@ export default function Navbar({
               className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'ai'
                   ? 'bg-violet-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
               <Brain className="w-3.5 h-3.5" />
@@ -88,11 +88,11 @@ export default function Navbar({
           {/* Right Action Controls */}
           <div className="flex items-center space-x-3">
             {/* Horizon Selector */}
-            <div className="hidden sm:flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-xs">
+            <div className="hidden sm:flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 text-xs">
               <button
                 onClick={() => setHorizon('weekly')}
                 className={`px-2.5 py-1 rounded-md transition-colors ${
-                  horizon === 'weekly' ? 'bg-slate-800 text-sky-400 font-semibold' : 'text-slate-400'
+                  horizon === 'weekly' ? 'bg-white shadow-sm text-sky-700 font-semibold' : 'text-slate-500'
                 }`}
               >
                 7-Day Weekly
@@ -100,7 +100,7 @@ export default function Navbar({
               <button
                 onClick={() => setHorizon('monthly')}
                 className={`px-2.5 py-1 rounded-md transition-colors ${
-                  horizon === 'monthly' ? 'bg-slate-800 text-sky-400 font-semibold' : 'text-slate-400'
+                  horizon === 'monthly' ? 'bg-white shadow-sm text-sky-700 font-semibold' : 'text-slate-500'
                 }`}
               >
                 30-Day Monthly
@@ -110,9 +110,9 @@ export default function Navbar({
             {/* Log Defect Button */}
             <button
               onClick={onOpenAddModal}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition-colors"
             >
-              <PlusCircle className="w-3.5 h-3.5 text-sky-400" />
+              <PlusCircle className="w-3.5 h-3.5 text-sky-600" />
               <span className="hidden sm:inline">Log Defect</span>
             </button>
 

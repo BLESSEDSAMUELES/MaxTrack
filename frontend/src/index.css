@@ -98,7 +98,7 @@ code, pre, .font-mono {
   font-size: 13px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 0.5px;
+  letter-spacing: -0.025em;
 }
 
 .brand-subtitle {
@@ -140,9 +140,10 @@ code, pre, .font-mono {
 }
 
 .nav-item-btn.active {
-  background-color: var(--accent-eng-light);
-  border-color: #bae6fd;
-  color: var(--accent-eng);
+  background-color: #f1f5f9;
+  border-left: 3px solid var(--accent-eng);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
@@ -263,7 +264,7 @@ code, pre, .font-mono {
   font-size: 13px;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 0.3px;
+  letter-spacing: -0.025em;
   text-transform: uppercase;
 }
 
@@ -291,23 +292,19 @@ code, pre, .font-mono {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 14px 16px;
-  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   position: relative;
   overflow: hidden;
-  border-left: 3.5px solid var(--accent-eng);
 }
 
 .kpi-card.green {
-  border-left-color: var(--accent-snt);
 }
 
 .kpi-card.amber {
-  border-left-color: var(--accent-trd);
 }
 
 .kpi-card.red {
-  border-left-color: var(--accent-danger);
 }
 
 .kpi-label {
@@ -456,13 +453,18 @@ code, pre, .font-mono {
 
 .rail-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: none;
   color: var(--text-primary);
   vertical-align: middle;
 }
 
+.rail-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
 .rail-table tbody tr:hover {
-  background-color: var(--bg-card-hover);
+  background-color: #f1f5f9;
+  transition: background-color 0.15s ease;
 }
 
 /* BUTTONS */
@@ -750,8 +752,8 @@ code, pre, .font-mono {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
   align-items: center;

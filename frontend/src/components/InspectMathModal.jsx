@@ -15,7 +15,7 @@ export default function InspectMathModal({ block, onClose }) {
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
-            <span>🧠</span>
+            <span></span>
             <span>MATHEMATICAL AUDIT TRAIL: BUNDLE {block.bundle_id}</span>
           </div>
           <button className="modal-close-btn" onClick={onClose}>

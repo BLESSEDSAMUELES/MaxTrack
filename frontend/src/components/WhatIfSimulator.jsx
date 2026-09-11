@@ -59,7 +59,7 @@ export default function WhatIfSimulator({
       <div className="rail-card border-[#fde68a] bg-[#fffbeb]">
         <div className="card-header border-[#fef3c7]">
           <div className="card-title text-[#b45309]">
-            <span>◈ WHAT-IF DISRUPTION SIMULATOR & DYNAMIC RESCHEDULER</span>
+            <span>WHAT-IF DISRUPTION SIMULATOR & DYNAMIC RESCHEDULER</span>
           </div>
           <div className="flex items-center gap-2">
             {isApplied ? (

@@ -47,7 +47,7 @@ CRIS DIGITAL TOKEN: SHA256-${block.bundle_id}-VERIFIED-OK
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
-            <span>📑</span>
+            <span></span>
             <span>CRIS STATUTORY WIRE MEMO: FORM S&T (T/351) & TRD PERMIT-TO-WORK</span>
           </div>
           <button className="modal-close-btn" onClick={onClose}>

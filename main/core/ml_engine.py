@@ -102,80 +102,112 @@ class Brain1MLEngine:
         return self.model_metrics
 
     def _extract_task_features(self, task: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, float]]:
-        """Harmonizes statutory features from any department task."""
+        """Harmonizes statutory features from any department task or sandbox input."""
         # 1. Safety Score (0 to 35)
-        safety_class = str(task.get("safety_class", "high")).lower()
-        if safety_class == "critical":
-            s_score = 35.0
-        elif safety_class == "high":
-            s_score = 25.0
-        elif safety_class == "medium":
-            s_score = 18.0
+        if "safety_score" in task and task["safety_score"] is not None:
+            s_score = float(task["safety_score"])
         else:
-            s_score = 10.0
+            safety_class = str(task.get("safety_class", "high")).lower()
+            if "crit" in safety_class:
+                s_score = 35.0
+            elif "high" in safety_class:
+                s_score = 25.0
+            elif "med" in safety_class:
+                s_score = 18.0
+            else:
+                s_score = 10.0
 
-        # Adjust for real SMMS / TDMS sensor telemetry
-        vib = float(task.get("sensor_vibration_mms", 0.0))
-        ins = float(task.get("insulation_mohm", 100.0))
-        if vib > 4.5:
-            s_score = min(35.0, s_score + 5.0)
-        if ins < 50.0:
-            s_score = min(35.0, s_score + 5.0)
-        if ins < 20.0:
-            s_score = min(35.0, s_score + 3.0)
+            # Adjust for real SMMS / TDMS sensor telemetry
+            vib = float(task.get("sensor_vibration_mms", 0.0))
+            ins = float(task.get("insulation_mohm", 100.0))
+            if vib > 4.5:
+                s_score = min(35.0, s_score + 5.0)
+            if ins < 50.0:
+                s_score = min(35.0, s_score + 5.0)
+            if ins < 20.0:
+                s_score = min(35.0, s_score + 3.0)
 
         # 2. Speed Restriction Penalty (0 to 25)
-        v_sec = 130.0
-        v_caution = float(task.get("caution_order_speed", 130.0))
-        if v_caution < v_sec:
-            speed_ratio = (v_sec - v_caution) / v_sec
-            d_score = min(25.0, speed_ratio * 25.0)
+        if "speed_penalty" in task and task["speed_penalty"] is not None:
+            d_score = float(task["speed_penalty"])
         else:
-            d_score = 0.0
+            v_sec = float(task.get("sectional_speed", 130.0))
+            v_caution = float(task.get("caution_order_speed", 130.0))
+            if v_caution < v_sec:
+                speed_ratio = (v_sec - v_caution) / v_sec
+                d_score = min(25.0, max(0.0, speed_ratio * 25.0))
+            else:
+                d_score = 0.0
 
         # 3. Overdue Days Ratio (0 to 20)
-        days_overdue = float(task.get("days_overdue", 0.0))
-        codal_period = float(task.get("codal_interval_days", 90.0))
-        o_score = min(20.0, (max(0.0, days_overdue) / max(1.0, codal_period)) * 20.0 * 2.0)
+        if "overdue_ratio" in task and task["overdue_ratio"] is not None:
+            o_score = float(task["overdue_ratio"])
+        else:
+            days_overdue = float(task.get("days_overdue", 0.0))
+            codal_period = float(task.get("codal_interval_days", 90.0))
+            o_score = min(20.0, max(0.0, (max(0.0, days_overdue) / max(1.0, codal_period)) * 20.0 * 2.0))
 
         # 4. Traffic Density Factor (0 to 10)
-        corridor = str(task.get("corridor_code", "")).upper()
-        if "NDLS" in corridor:
-            t_score = 9.5
-        elif "DNR" in corridor or "PNBE" in corridor:
-            t_score = 8.5
+        if "traffic_density" in task and task["traffic_density"] is not None:
+            t_score = float(task["traffic_density"])
+        elif "traffic_gmt" in task and task["traffic_gmt"] is not None:
+            traffic_gmt = float(task["traffic_gmt"])
+            t_score = min(10.0, max(1.0, (traffic_gmt / 140.0) * 10.0))
         else:
-            t_score = 7.0
+            corridor = str(task.get("corridor_code", "")).upper()
+            if "NDLS" in corridor:
+                t_score = 9.5
+            elif "DNR" in corridor or "PNBE" in corridor:
+                t_score = 8.5
+            else:
+                t_score = 7.0
 
         # 5. Environmental & Thermal Stress (0 to 10)
-        rail_temp = float(task.get("rail_temp_c", 38.0))
-        if rail_temp >= 55.0:  # High rail thermal expansion
-            e_score = 10.0
-        elif rail_temp >= 45.0:
-            e_score = 7.5
-        elif rail_temp <= 8.0:   # Low rail contraction/fracture hazard
-            e_score = 8.0
+        if "env_thermal_stress" in task and task["env_thermal_stress"] is not None:
+            e_score = float(task["env_thermal_stress"])
         else:
-            e_score = 4.0
+            rail_temp = float(task.get("rail_temp_c", 38.0))
+            if rail_temp >= 55.0:  # High rail thermal expansion
+                e_score = 10.0
+            elif rail_temp >= 45.0:
+                e_score = 7.5 + min(2.5, ((rail_temp - 45.0) / 10.0) * 2.5)
+            elif rail_temp <= 8.0:   # Low rail contraction/fracture hazard
+                e_score = 8.0 + min(2.0, ((8.0 - max(0.0, rail_temp)) / 8.0) * 2.0)
+            else:
+                e_score = 4.0 + ((rail_temp - 8.0) / 37.0) * 1.5
 
         # 6. Concurrency Potential (0 to 10)
-        can_bundle = task.get("can_combine_with_engineering", False) or task.get("shadow_block_coordinated")
-        c_score = 9.0 if can_bundle else 3.0
+        if "concurrency_potential" in task and task["concurrency_potential"] is not None:
+            c_score = float(task["concurrency_potential"])
+        else:
+            can_bundle = task.get("can_combine_with_engineering", False) or task.get("shadow_block_coordinated")
+            c_score = 9.0 if can_bundle else 3.0
 
         # 7. Department code (0=ENG, 1=SNT, 2=TRD)
-        dept = str(task.get("department", "ENG")).upper()
-        if "SNT" in dept or "SIG" in dept:
-            dept_code = 1
-        elif "TRD" in dept or "ELEC" in dept:
-            dept_code = 2
+        if "dept_code_encoded" in task and task["dept_code_encoded"] is not None:
+            dept_code = int(task["dept_code_encoded"])
+        elif "dept_code" in task and task["dept_code"] is not None:
+            dept_code = int(task["dept_code"])
         else:
-            dept_code = 0
+            dept = str(task.get("department", "ENG")).upper()
+            if "SNT" in dept or "SIG" in dept:
+                dept_code = 1
+            elif "TRD" in dept or "ELEC" in dept:
+                dept_code = 2
+            else:
+                dept_code = 0
 
         # 8. Power cut required (0 or 1)
-        pwr_cut = 1 if (task.get("requires_power_off") or task.get("requires_power_block") or dept_code == 2) else 0
+        if "power_cut_required" in task and task["power_cut_required"] is not None:
+            pwr_cut = int(task["power_cut_required"])
+        else:
+            pwr_cut = 1 if (task.get("requires_power_off") or task.get("requires_power_block") or dept_code == 2) else 0
 
         # 9. Machine required (0 or 1)
-        machine = 1 if (task.get("machine_required") or "TAMPING" in str(task.get("task_type", "")).upper() or dept_code == 0) else 0
+        if "machine_required" in task and task["machine_required"] is not None:
+            machine = int(task["machine_required"])
+        else:
+            machine = 1 if (task.get("machine_required") or "TAMPING" in str(task.get("task_type", "")).upper() or dept_code == 0) else 0
 
         features = np.array([[s_score, d_score, o_score, t_score, e_score, c_score, dept_code, pwr_cut, machine]])
         meta = {
@@ -250,25 +282,9 @@ class Brain1MLEngine:
     def predict_custom(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Interactive evaluator sandbox prediction endpoint.
-        Receives custom user parameters and returns real-time LightGBM inference.
+        Receives custom user parameters (domain or feature-level) and returns real-time LightGBM inference.
         """
-        dept_str = str(params.get("department", "ENG")).upper()
-        dept_code = 1 if "SNT" in dept_str else (2 if "TRD" in dept_str else 0)
-
-        safety_score = float(params.get("safety_score", 25.0))
-        speed_penalty = float(params.get("speed_penalty", 10.0))
-        overdue_ratio = float(params.get("overdue_ratio", 8.0))
-        traffic_density = float(params.get("traffic_density", 8.0))
-        env_thermal_stress = float(params.get("env_thermal_stress", 5.0))
-        concurrency_potential = float(params.get("concurrency_potential", 5.0))
-        power_cut_required = int(params.get("power_cut_required", 0))
-        machine_required = int(params.get("machine_required", 0))
-
-        features = np.array([[
-            safety_score, speed_penalty, overdue_ratio, traffic_density,
-            env_thermal_stress, concurrency_potential, dept_code,
-            power_cut_required, machine_required
-        ]])
+        features, meta = self._extract_task_features(params)
         df_features = pd.DataFrame(features, columns=FEATURE_NAMES)
 
         predicted_aci = float(self.aci_model.predict(df_features)[0]) if self.aci_model else 50.0
@@ -280,24 +296,35 @@ class Brain1MLEngine:
         q10 = max(20, min(q10, q50 - 15))
         q90 = max(q50 + 20, q90)
 
+        # Build dynamic readable justification
+        justification_parts = []
+        if "safety_score" in meta:
+            justification_parts.append(f"Safety Risk {meta['safety_score']}/35")
+        if "speed_penalty" in meta:
+            justification_parts.append(f"Speed Penalty {meta['speed_penalty']}/25")
+        if "overdue_factor" in meta:
+            justification_parts.append(f"Codal Overdue {meta['overdue_factor']}/20")
+        if "env_stress" in meta:
+            justification_parts.append(f"Thermal Stress {meta['env_stress']}/10")
+        if "traffic_factor" in meta:
+            justification_parts.append(f"Traffic GMT {meta['traffic_factor']}/10")
+
+        justification = " · ".join(justification_parts) if justification_parts else "LightGBM Multi-Criteria Assessment"
+
         return {
             "predicted_aci": predicted_aci,
+            "aci_score": predicted_aci,
             "duration_quantiles": {
                 "q10_curtailed_mins": q10,
                 "q50_sanctioned_mins": q50,
                 "q90_megablock_mins": q90
             },
-            "features_used": {
-                "safety_score": safety_score,
-                "speed_penalty": speed_penalty,
-                "overdue_ratio": overdue_ratio,
-                "traffic_density": traffic_density,
-                "env_thermal_stress": env_thermal_stress,
-                "concurrency_potential": concurrency_potential,
-                "dept_code": dept_code,
-                "power_cut_required": power_cut_required,
-                "machine_required": machine_required
-            },
+            "q10_duration": q10,
+            "q50_duration": q50,
+            "q90_duration": q90,
+            "justification": justification,
+            "explanation": f"LightGBM evaluated ACI: {predicted_aci}/100. Quantiles: Q10={q10}m, Q50={q50}m, Q90={q90}m.",
+            "features_used": meta,
             "model_type": "LightGBM Production GBDT"
         }
 

@@ -205,7 +205,11 @@ class Brain1MLEngine:
 
         # 9. Machine required (0 or 1)
         if "machine_required" in task and task["machine_required"] is not None:
-            machine = int(task["machine_required"])
+            try:
+                machine = int(task["machine_required"])
+            except (ValueError, TypeError):
+                # machine_required is a machine name string (e.g. 'CSM 09-32'), treat as 1
+                machine = 1 if task["machine_required"] else 0
         else:
             machine = 1 if (task.get("machine_required") or "TAMPING" in str(task.get("task_type", "")).upper() or dept_code == 0) else 0
 

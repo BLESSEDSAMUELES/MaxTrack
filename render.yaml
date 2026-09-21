@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: maxtrack-api
+    runtime: python
+    plan: free
+    rootDir: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.12"

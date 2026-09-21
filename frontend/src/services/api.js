@@ -3,7 +3,7 @@
  * Connects directly to FastAPI backend running in Main - File (or dev proxy on :5173)
  */
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 export async function fetchSystemStatus(corridor = 'NDLS-CNB') {
   const res = await fetch(`${API_BASE}/status?corridor=${encodeURIComponent(corridor)}`);

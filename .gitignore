@@ -61,6 +61,7 @@ lerna-debug.log*
 .env.*
 *.env
 !*.env.example
+!frontend/.env.production
 
 # --- IDEs & Code Editors ---
 .vscode/*
@@ -106,5 +107,7 @@ htmlcov/
 *~
 
 # --- Explicit Whitelists for Essential Machine Learning Assets ---
+!main/core/models/*.joblib
+!main/core/models/*.json
 !Main - File/core/models/*.joblib
 !Main - File/core/models/*.json

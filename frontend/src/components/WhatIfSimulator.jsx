@@ -97,7 +97,7 @@ export default function WhatIfSimulator({
             Ultrasonic testing detects critical transverse rail flaw on UP_MAIN. Injects emergency 150m possession with fishplate clamping and freight train loop regulation.
           </p>
           <button
-            className="action-btn-primary w-full justify-center !bg-[#dc2626] !border-[#b91c1c]"
+            className="action-btn-primary w-full justify-center !bg-[#0284c7]"
             disabled={simLoading}
             onClick={() => handleRun('IMR_FRACTURE')}
           >
@@ -118,7 +118,7 @@ export default function WhatIfSimulator({
             CSM 09-32 tamper encounters hydraulic seal blow-out, exceeding sanctioned window by 45 mins. Section Controller issues controlled advance order.
           </p>
           <button
-            className="action-btn-primary w-full justify-center !bg-[#d97706] !border-[#b45309]"
+            className="action-btn-primary w-full justify-center !bg-[#0284c7]"
             disabled={simLoading}
             onClick={() => handleRun('BLOCK_BURST')}
           >

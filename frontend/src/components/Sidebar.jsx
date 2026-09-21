@@ -34,8 +34,7 @@ export default function Sidebar({
       >
         <img src="/assets/ir_logo.svg" alt="Indian Railways" className="sidebar-brand-img" />
         <div className="sidebar-brand-text">
-          <span className="brand-title">IR-ABPS | MAXTRACK</span>
-          <span className="brand-subtitle">CRIS • SIH PS 26027</span>
+          <span className="brand-title">MAXTRACK</span>
         </div>
       </div>
 

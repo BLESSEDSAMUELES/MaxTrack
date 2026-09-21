@@ -51,7 +51,7 @@ export default function BlockScheduler({
 
           <div className="flex gap-2 flex-wrap">
             <button
-              className="action-btn-primary !bg-[#7c3aed] !border-[#6d28d9]"
+              className="action-btn-primary !bg-[#0284c7]"
               onClick={onOpenAIAuditModal}
             >
               View AI Decision Audit →
@@ -63,7 +63,7 @@ export default function BlockScheduler({
               View Marey Time-Space Diagram →
             </button>
             <button
-              className="action-btn-primary !bg-[#059669] !border-[#047857]"
+              className="action-btn-primary !bg-[#0284c7]"
               onClick={() => onNavigate('bdms_dispatch')}
             >
               Export CRIS Statutory Memos →

@@ -90,19 +90,19 @@ export default function DataBridge({ state, onShowToast }) {
           </div>
         </div>
 
-        <div className="data-bridge-kpi-chip !border-l-red-600">
+        <div className="data-bridge-kpi-chip !border-l-blu-600">
           <div className="chip-label">Critical Safety Demands</div>
           <div className="chip-value text-red-600">{criticalCount}</div>
           <div className="chip-sub">IMR / G&SR 3.51 / ACTM Urgent</div>
         </div>
 
-        <div className="data-bridge-kpi-chip !border-l-[#059669]">
+        <div className="data-bridge-kpi-chip !border-l-[#0284c7]">
           <div className="chip-label">Heavy Machines Requisitioned</div>
           <div className="chip-value text-[#059669]">{machinesCount}</div>
           <div className="chip-sub">CSM, BCM, UNIMAT & Tower Wagons</div>
         </div>
 
-        <div className="data-bridge-kpi-chip !border-l-[#d97706]">
+        <div className="data-bridge-kpi-chip !border-l-[#0284c7]">
           <div className="chip-label">Active Speed Restrictions</div>
           <div className="chip-value text-[#d97706]">{cautionCount}</div>
           <div className="chip-sub">Caution orders to be restored</div>
@@ -149,7 +149,7 @@ export default function DataBridge({ state, onShowToast }) {
         {/* Live Filter and Search Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-md">
           <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-            <span className="text-[#64748b] text-xs">🔍</span>
+            <span className="text-[#64748b] text-xs">🔍︎</span>
             <input
               type="text"
               className="form-input !py-1 text-xs"

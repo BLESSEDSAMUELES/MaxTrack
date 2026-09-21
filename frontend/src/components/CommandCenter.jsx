@@ -96,7 +96,7 @@ export default function CommandCenter({
         <div className="mb-4">
           <div className="compliance-header">
             <div className="compliance-title">
-              ◈ Statutory Compliance Verification ({complianceSummary.total_rules_checked || 0} Rules × {sched.total_blocks_scheduled || 0} Blocks)
+              Statutory Compliance Verification ({complianceSummary.total_rules_checked || 0} Rules × {sched.total_blocks_scheduled || 0} Blocks)
             </div>
             <div className="compliance-pct">
               {complianceSummary.compliance_pct || 100}% Pass Rate
@@ -122,7 +122,7 @@ export default function CommandCenter({
       <div className="rail-card border-[#bae6fd] bg-[#f0f9ff]">
         <div className="card-header border-[#e0f2fe]">
           <div className="card-title text-[#0369a1]">
-            <span>◈ TWO-BRAIN HYBRID ARCHITECTURE STATUS</span>
+            <span>TWO-BRAIN HYBRID ARCHITECTURE STATUS</span>
           </div>
           <div className="flex items-center gap-2">
             <button

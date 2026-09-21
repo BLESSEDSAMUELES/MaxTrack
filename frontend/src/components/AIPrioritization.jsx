@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { predictCustomACI } from '../services/api';
 
 export default function AIPrioritization({ state, onOpenTaskModal, onShowToast }) {
@@ -53,6 +53,38 @@ export default function AIPrioritization({ state, onOpenTaskModal, onShowToast }
   const [evalResult, setEvalResult] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
 
+  // Debounced live inference when parameters change or on mount
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(async () => {
+      try {
+        setEvalLoading(true);
+        const payload = {
+          department: sandboxDept,
+          safety_class: sandboxSafety,
+          caution_order_speed: parseInt(sandboxSpeed, 10),
+          days_overdue: parseInt(sandboxOverdue, 10),
+          codal_interval_days: parseInt(sandboxCodal, 10),
+          rail_temp_c: parseFloat(sandboxTemp),
+          traffic_gmt: parseFloat(sandboxTraffic)
+        };
+        const res = await predictCustomACI(payload);
+        if (isMounted) {
+          setEvalResult(res);
+        }
+      } catch (err) {
+        console.error('Live evaluator error:', err);
+      } finally {
+        if (isMounted) setEvalLoading(false);
+      }
+    }, 180);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [sandboxDept, sandboxSafety, sandboxSpeed, sandboxOverdue, sandboxCodal, sandboxTemp, sandboxTraffic]);
+
   const handlePredict = async (e) => {
     e?.preventDefault();
     setEvalLoading(true);
@@ -68,7 +100,8 @@ export default function AIPrioritization({ state, onOpenTaskModal, onShowToast }
       };
       const res = await predictCustomACI(payload);
       setEvalResult(res);
-      onShowToast?.(`LightGBM evaluated ACI: ${res.aci_score || 84}/100`, 'success');
+      const score = res.predicted_aci ?? res.aci_score ?? 50;
+      onShowToast?.(`LightGBM evaluated ACI: ${score}/100`, 'success');
     } catch (err) {
       console.error(err);
       onShowToast?.('Failed to evaluate custom parameters', 'danger');
@@ -286,28 +319,86 @@ export default function AIPrioritization({ state, onOpenTaskModal, onShowToast }
 
           {/* Sandbox Evaluation Output */}
           {evalResult && (
-            <div className="mt-3 p-3 bg-white border border-[#bae6fd] rounded-md shadow-sm">
+            <div className="mt-3 p-3 bg-white border border-[#bae6fd] rounded-md shadow-sm transition-all">
               <div className="flex justify-between items-center mb-1.5">
-                <span className="font-bold text-xs text-[#0f172a]">Predicted ACI Score:</span>
-                <span className="text-xl font-mono font-black text-[#0284c7]">
-                  {evalResult.aci_score || 84.2} / 100
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-[#0f172a]">Predicted ACI Score:</span>
+                  {evalLoading && (
+                    <span className="inline-block w-2 h-2 rounded-full bg-[#0284c7] animate-ping" title="Running live inference" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase font-mono ${
+                    (evalResult.predicted_aci ?? evalResult.aci_score) >= 75
+                      ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                      : (evalResult.predicted_aci ?? evalResult.aci_score) >= 55
+                      ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                      : (evalResult.predicted_aci ?? evalResult.aci_score) >= 40
+                      ? 'bg-sky-100 text-sky-700 border border-sky-200'
+                      : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    {(evalResult.predicted_aci ?? evalResult.aci_score) >= 75 ? 'Critical ACI' :
+                     (evalResult.predicted_aci ?? evalResult.aci_score) >= 55 ? 'High ACI' :
+                     (evalResult.predicted_aci ?? evalResult.aci_score) >= 40 ? 'Medium ACI' : 'Low ACI'}
+                  </span>
+                  <span className={`text-xl font-mono font-black ${
+                    (evalResult.predicted_aci ?? evalResult.aci_score) >= 75 ? 'text-rose-600' :
+                    (evalResult.predicted_aci ?? evalResult.aci_score) >= 55 ? 'text-amber-600' :
+                    'text-[#0284c7]'
+                  }`}>
+                    {evalResult.predicted_aci ?? evalResult.aci_score} <span className="text-xs text-[#64748b]">/ 100</span>
+                  </span>
+                </div>
               </div>
+
+              {/* Dynamic Feature Contribution Chips */}
+              {evalResult.features_used && (
+                <div className="grid grid-cols-5 gap-1 my-2 text-[10px] text-center font-mono">
+                  <div className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5">
+                    <div className="text-[9px] text-slate-500 font-sans">Safety</div>
+                    <div className="font-bold text-slate-800">{evalResult.features_used.safety_score}</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5">
+                    <div className="text-[9px] text-slate-500 font-sans">Speed Drop</div>
+                    <div className="font-bold text-slate-800">{evalResult.features_used.speed_penalty}</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5">
+                    <div className="text-[9px] text-slate-500 font-sans">Overdue</div>
+                    <div className="font-bold text-slate-800">{evalResult.features_used.overdue_factor}</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5">
+                    <div className="text-[9px] text-slate-500 font-sans">Thermal</div>
+                    <div className="font-bold text-slate-800">{evalResult.features_used.env_stress}</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded px-1 py-0.5">
+                    <div className="text-[9px] text-slate-500 font-sans">Traffic</div>
+                    <div className="font-bold text-slate-800">{evalResult.features_used.traffic_factor}</div>
+                  </div>
+                </div>
+              )}
+
               <div className="text-[11px] text-[#475569] leading-tight mb-2">
                 {evalResult.justification || 'LightGBM Multi-Criteria Assessment'}
               </div>
+
               <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono">
                 <div className="bg-[#f0f9ff] p-1 rounded border border-[#e0f2fe]">
                   <div className="text-[#64748b]">Q10 Curtailed</div>
-                  <div className="font-bold text-[#0284c7]">{evalResult.q10_duration || 45}m</div>
+                  <div className="font-bold text-[#0284c7]">
+                    {evalResult.q10_duration ?? evalResult.duration_quantiles?.q10_curtailed_mins ?? 45}m
+                  </div>
                 </div>
                 <div className="bg-[#ecfdf5] p-1 rounded border border-[#d1fae5]">
                   <div className="text-[#64748b]">Q50 Median</div>
-                  <div className="font-bold text-[#059669]">{evalResult.q50_duration || 90}m</div>
+                  <div className="font-bold text-[#059669]">
+                    {evalResult.q50_duration ?? evalResult.duration_quantiles?.q50_sanctioned_mins ?? 90}m
+                  </div>
                 </div>
                 <div className="bg-[#fffbeb] p-1 rounded border border-[#fef3c7]">
                   <div className="text-[#64748b]">Q90 Mega Block</div>
-                  <div className="font-bold text-[#d97706]">{evalResult.q90_duration || 135}m</div>
+                  <div className="font-bold text-[#d97706]">
+                    {evalResult.q90_duration ?? evalResult.duration_quantiles?.q90_megablock_mins ?? 135}m
+                  </div>
                 </div>
               </div>
             </div>

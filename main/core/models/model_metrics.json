@@ -11,7 +11,7 @@
     "TDMS_Electrical_TRD": 2000
   },
   "aci_metrics": {
-    "r2_score": 0.9926,
+    "r2_score": 0.9927,
     "mae": 0.63,
     "rmse": 0.81
   },
@@ -24,48 +24,48 @@
   "feature_importances": [
     {
       "feature": "safety_score",
-      "importance": 1077.0,
-      "percentage": 25.0
+      "importance": 1072.0,
+      "percentage": 24.8
     },
     {
       "feature": "env_thermal_stress",
-      "importance": 926.0,
-      "percentage": 21.5
-    },
-    {
-      "feature": "overdue_ratio",
-      "importance": 763.0,
-      "percentage": 17.7
+      "importance": 892.0,
+      "percentage": 20.6
     },
     {
       "feature": "speed_penalty",
-      "importance": 720.0,
-      "percentage": 16.7
+      "importance": 785.0,
+      "percentage": 18.1
+    },
+    {
+      "feature": "overdue_ratio",
+      "importance": 743.0,
+      "percentage": 17.2
     },
     {
       "feature": "traffic_density",
-      "importance": 707.0,
-      "percentage": 16.4
+      "importance": 718.0,
+      "percentage": 16.6
     },
     {
       "feature": "concurrency_potential",
-      "importance": 66.0,
-      "percentage": 1.5
+      "importance": 72.0,
+      "percentage": 1.7
     },
     {
       "feature": "power_cut_required",
-      "importance": 24.0,
+      "importance": 27.0,
       "percentage": 0.6
     },
     {
-      "feature": "machine_required",
-      "importance": 11.0,
-      "percentage": 0.3
+      "feature": "dept_code_encoded",
+      "importance": 16.0,
+      "percentage": 0.4
     },
     {
-      "feature": "dept_code_encoded",
-      "importance": 8.0,
-      "percentage": 0.2
+      "feature": "machine_required",
+      "importance": 3.0,
+      "percentage": 0.1
     }
   ],
   "features": [
